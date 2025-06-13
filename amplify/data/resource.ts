@@ -3,11 +3,13 @@ import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 const schema = a.schema({
   Job: a
     .model({
+      jobId: a.id(),
+      userId: a.string(),
       name: a.string(),
-      selectedModels: a.list(a.string()),
+      selectedModels: a.string(),
       createdAt: a.datetime(),
       lastUpdatedAt: a.datetime(),
-      files: a.hasMany('JobFile'),
+      files: a.hasMany('JobFile', 'jobFileId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
   
@@ -20,7 +22,7 @@ const schema = a.schema({
       isRagIngestionComplete: a.boolean().default(false),
       isEvalDatasetApproved: a.boolean().default(false),
       isEvalComplete: a.boolean().default(false),
-      job: a.belongsTo('Job'),
+      job: a.belongsTo('Job', 'jobId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });
