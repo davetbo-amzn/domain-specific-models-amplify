@@ -14,8 +14,8 @@ const schema = a.schema({
       job: a.belongsTo('Job', 'jobId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
-    
-    Job: a
+  
+  Job: a
     .model({
       userId: a.string(),
       name: a.string(),
