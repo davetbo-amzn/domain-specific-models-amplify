@@ -105,6 +105,8 @@ function App() {
   const [tabValue, setTabValue] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    console.log('TabChange handled:');
+    console.dir(event);
     setTabValue(newValue);
   };
 

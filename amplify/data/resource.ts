@@ -1,18 +1,7 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
 const schema = a.schema({
-  Job: a
-    .model({
-      jobId: a.id(),
-      userId: a.string(),
-      name: a.string(),
-      selectedModels: a.string(),
-      createdAt: a.datetime(),
-      lastUpdatedAt: a.datetime(),
-      files: a.hasMany('JobFile', 'jobFileId'),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
-  
+ 
   JobFile: a
     .model({
       jobFileId: a.id(),
@@ -23,6 +12,18 @@ const schema = a.schema({
       isEvalDatasetApproved: a.boolean().default(false),
       isEvalComplete: a.boolean().default(false),
       job: a.belongsTo('Job', 'jobId'),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+    
+    Job: a
+    .model({
+      jobId: a.id(),
+      userId: a.string(),
+      name: a.string(),
+      selectedModels: a.string(),
+      createdAt: a.datetime(),
+      lastUpdatedAt: a.datetime(),
+      files: a.hasMany('JobFile', 'jobFileId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });
