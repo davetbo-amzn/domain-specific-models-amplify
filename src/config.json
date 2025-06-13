@@ -1,0 +1,69 @@
+{
+    "embeddings": {
+        "bedrock": {
+            "amazon.titan-embed-text-v2:0": {
+                "max_length": 8191,
+                "dimensions": 1024
+            },
+            "cohere.embed-multilingual-v3": {
+                "max_length": 512,
+                "dimensions": 1024
+            }
+        },
+        "sagemaker": {
+            "intfloat/multilingual-e5-large-instruct": {
+                "max_length": 512
+            }
+        },
+        "openai": {
+            "text-embedding-3-small": {
+                "max_length": 8191,
+                "dimensions": 1536
+            },
+            "text-embedding-3-large": {
+                "max_length": 8191,
+                "dimensions": 3072
+            },
+            "openai_key": "PUT YOUR KEY HERE"
+        },
+        "custom": {
+            "distilled-qwen": {
+                "type": "sagemaker",
+                "endpoint": "example_endpoint_url"
+            }
+        }
+    },
+    "llms": {
+        "bedrock": {
+            "us.anthropic.claude-3-5-haiku-20241022-v1:0": {
+                "max_input_tokens": 204800,
+                "max_output_tokens": 4096
+            },
+            "us.anthropic.claude-3-5-sonnet-20241022-v2:0": {
+                "max_input_tokens": 204800,
+                "max_output_tokens": 4096
+            }
+        },
+        "sagemaker": {
+            "mistralai/Mixtral-8x7B-v0.1": {
+                "max_input_tokens": 32768,
+                "max_output_tokens": 4096
+            }
+        },
+        "openai": {
+            "gpt-4.1": {
+                "max_input_tokens": 204800,
+                "max_output_tokens": 4096
+            }
+        },
+        "custom": {
+            "custom_model_id": {
+                "type": "sagemaker",
+                "endpoint": "example_endpoint_url",
+                "max_input_tokens": 204800,
+                "max_output_tokens": 4096
+                
+            }
+        }
+    }
+}
