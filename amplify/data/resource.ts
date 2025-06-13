@@ -17,7 +17,6 @@ const schema = a.schema({
     
     Job: a
     .model({
-      jobId: a.id(),
       userId: a.string(),
       name: a.string(),
       selectedModels: a.string(),
