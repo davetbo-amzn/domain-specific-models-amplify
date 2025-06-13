@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { generateClient } from 'aws-amplify/data';
 import { uploadData } from 'aws-amplify/storage';
 import config from '../config.json'
+import aws_config from '../../amplify_outputs.json';
 
 import {
   Accordion,
@@ -76,6 +77,7 @@ export default function CreateJob() {
       try {
         const key = `jobs/${jobId}/${file.name}`;
         const result = await uploadData({
+          bucket: config.jobInputBucket,
           key,
           data: file,
           options: {
@@ -143,13 +145,18 @@ export default function CreateJob() {
 
     const renderModelsByProvider = (type: "embeddings" | "llms") => {
           const providers = ["bedrock", "sagemaker", "openai", "custom"];
-          // console.log(`Got config type ${type}`)
-          // console.dir(config)
-          // console.dir(config[type])
+          console.log(`Got config type ${type}`)
+          console.dir(config)
+          console.dir(config[type])
           return providers.map(provider => {
-            // console.log('got models:')
+            console.log('got models:')
             // console.dir(config[type][provider])
-            const models: Record<string, Record<string, any>> = config[type][provider];          
+            // Get provider data and filter out non-object values like API keys
+            const providerData = config[type]?.[provider as keyof typeof config[typeof type]] || {};
+            // Filter out non-object values (like API keys) and create a properly typed object
+            const models: Record<string, Record<string, any>> = Object.entries(providerData)
+              .filter(([_, value]) => typeof value === 'object' && value !== null)
+              .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
             if (!models || Object.keys(models).length === 0) return null;
             
             return (
@@ -295,7 +302,7 @@ export default function CreateJob() {
                     {jobType === "embeddings" ? "Embedding Models" : "LLM Models"} Available
                   </Typography>
                   <Box sx={{ mt: 2 }}>
-                    {renderModelsByProvider(jobType as "embeddings" | "llm")}
+                    {renderModelsByProvider(jobType as "embeddings" | "llms")}
                   </Box>
                 </Paper>
               </Grid>
