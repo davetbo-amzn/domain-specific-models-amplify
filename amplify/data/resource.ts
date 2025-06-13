@@ -11,7 +11,7 @@ const schema = a.schema({
       isRagIngestionComplete: a.boolean().default(false),
       isEvalDatasetApproved: a.boolean().default(false),
       isEvalComplete: a.boolean().default(false),
-      job: a.belongsTo('Job', 'jobId'),
+      job: a.belongsTo('Job', 'files'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
   
@@ -22,7 +22,7 @@ const schema = a.schema({
       selectedModels: a.string(),
       createdAt: a.datetime(),
       lastUpdatedAt: a.datetime(),
-      files: a.hasMany('JobFile', 'jobId'),
+      files: a.hasMany('JobFile', 'jobFileId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });
