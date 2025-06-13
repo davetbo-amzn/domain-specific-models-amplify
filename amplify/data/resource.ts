@@ -22,7 +22,7 @@ const schema = a.schema({
       selectedModels: a.string(),
       createdAt: a.datetime(),
       lastUpdatedAt: a.datetime(),
-      files: a.hasMany('JobFile', 'jobFileId'),
+      files: a.hasMany('JobFile', 'jobId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });
