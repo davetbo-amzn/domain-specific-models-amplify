@@ -11,7 +11,7 @@ import {
 import LogoutIcon from '@mui/icons-material/Logout';
 
 import CreateJob from './pages/CreateJob';
-import ReviewJobs from './pages/ReviewJobs';
+// import ReviewJobs from './pages/ReviewJobs';
 
 // This will be replaced with actual data from a JSON file
 
@@ -187,7 +187,7 @@ function App() {
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          <ReviewJobs/>
+          {/* <ReviewJobs/> */}
         </TabPanel>
       </Container>
     </Box>
