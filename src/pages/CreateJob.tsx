@@ -4,6 +4,7 @@ import { generateClient } from 'aws-amplify/data';
 import { uploadData } from 'aws-amplify/storage';
 import config from '../config.json'
 import aws_config from '../../amplify_outputs.json';
+import { FileUploader } from '@aws-amplify/ui-react-storage';
 
 import {
   Accordion,
@@ -27,9 +28,9 @@ import {
     ListItemText
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-
+import { v4 as uuidv4 } from 'uuid';
 import { Schema } from 'aws-amplify/datastore';
+import '@aws-amplify/ui-react/styles.css';
 
 type ModelSelection = {
   [modelId: string]: boolean;
@@ -43,6 +44,7 @@ const client = generateClient<Schema>();
 // }
 
 export default function CreateJob() {
+    const jobId = uuidv4();
     const [jobType, setJobType] = useState<string>("");
     const [jobName, setJobName] = useState<string>("");
     const [jobs, setJobs] = useState<Array<any>>([]);
@@ -73,23 +75,25 @@ export default function CreateJob() {
 
     const [isUploading, setIsUploading] = useState(false);
 
-    const uploadFileToS3 = async (file: File, jobId: string) => {
-      try {
-        const key = `jobs/${jobId}/${file.name}`;
-        const result = await uploadData({
-          bucket: config.jobInputBucket,
-          key,
-          data: file,
-          options: {
-            contentType: file.type
-          }
-        });
-        return { key, result };
-      } catch (error) {
-        console.error(`Error uploading file ${file.name}:`, error);
-        throw error;
-      }
-    };
+    // const uploadFileToS3 = async (file: File, jobId: string) => {
+    //   try {
+    //     const path = `${jobId}/${file.name}`;
+    //     console.log(`Uploading file ${file.name} to S3 with key ${path}`);      
+        
+    //     const result = await uploadData({
+    //       path: path,
+    //       data: file,
+    //       options: {
+    //         accessLevel: 'private',
+    //         contentType: file.type
+    //       }
+    //     });
+    //     return result;
+    //   } catch (error) {
+    //     console.error(`Error uploading file ${file.name}:`, error);
+    //     throw error;
+    //   }
+    // };
 
     const handleCreateJob = async () => {
         if (jobName && jobType) {
@@ -107,7 +111,7 @@ export default function CreateJob() {
           setIsUploading(true);
           
           try {
-            const jobId = Date.now().toString();
+            //const jobId = Date.now().toString();
             const uploadPromises = files.map(file => uploadFileToS3(file, jobId));
             const uploadResults = await Promise.all(uploadPromises);
             
@@ -239,21 +243,27 @@ export default function CreateJob() {
               <Typography variant="h6" gutterBottom>
                 Upload Files
               </Typography>
-              <input
+              {/* <input
                 type="file"
                 multiple
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
+              /> */}
+               <FileUploader
+                acceptedFileTypes={['application/jsonl']}
+                path={({ identityId }) => `private/${identityId}/${jobId}/`}
+                maxFileCount={1000}
+                isResumable
               />
-              <Button
+              {/* <Button
                 variant="contained"
                 startIcon={<CloudUploadIcon />}
                 onClick={() => fileInputRef.current?.click()}
                 sx={{ mb: 2 }}
               >
                 Upload Files
-              </Button>
+              </Button> */}
               {files.length > 0 && (
                 <List>
                   {files.map((file, index) => (

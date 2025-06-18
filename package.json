@@ -11,13 +11,14 @@
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.5.5",
-    "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.14.19",
-    "@mui/material": "^5.14.19",
+    "@aws-amplify/ui-react-storage": "^3.11.0",
+    "@cloudscape-design/components": "^3.0.992",
+    "@cloudscape-design/global-styles": "^1.0.44",
+    "amplify": "^0.0.11",
     "aws-amplify": "^6.6.6",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.5.0",
