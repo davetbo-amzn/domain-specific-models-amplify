@@ -1,5 +1,5 @@
 {
-  "name": "amplify-vite-react-template",
+  "name": "domain-model-evals1",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -18,7 +18,8 @@
     "aws-amplify": "^6.6.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^7.6.2"
+    "react-router-dom": "^7.6.2",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.5.0",
@@ -28,9 +29,9 @@
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
-    "aws-cdk": "^2.138.0",
-    "aws-cdk-lib": "^2.138.0",
-    "constructs": "^10.3.0",
+    "aws-cdk": "^2.201.0",
+    "aws-cdk-lib": "^2.201.0",
+    "constructs": "^10.4.2",
     "esbuild": "^0.20.2",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",

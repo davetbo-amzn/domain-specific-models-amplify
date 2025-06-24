@@ -2,33 +2,22 @@
 //  SPDX-License-Identifier: MIT-0
 import {v4 as uuidv4 } from 'uuid';
 import { FormEvent, useEffect, useState } from 'react';
-import { Button, Checkbox, Container, Form, FormField, Header, Input, RadioGroup, SpaceBetween, Spinner, Tabs, Multiselect, Box } from '@cloudscape-design/components';
+import { Alert, Button, Checkbox, Container, Form, FormField, Header, Input, RadioGroup, SpaceBetween, Spinner, Tabs, Multiselect, Box } from '@cloudscape-design/components';
 import { useParams } from 'react-router-dom';
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal'
-import { CreateJob, JobProps, JobType, EvalDatasetApprovalStatus, EvalDatasetGenerationStatus, EvalStatus, ListJobs, RagIngestionStatus } from './Job'
+import { CreateJob, DeleteJob, GetJob, JobProps, JobType, EvalDatasetApprovalStatus, EvalDatasetGenerationStatus, EvalStatus, ListJobs, RagIngestionStatus, UpdateJob } from './Job'
+import { CreateJobFile, JobFileProps } from './JobFile'
 import UploadedDocumentsTable from './UploadedDocumentsTable'
 import config from '../../config.json';
 import { Cache } from 'aws-amplify/utils';
 
-// async function getTableProvider(urlJobId: string, limit=20, lastEvalKey='') {
-//   //// console.log("newApi:")
-//   //// console.dir(provider)
-//   if (!urlJobId) {
-//     return []
-//   }
-//   const data = await api.listUploadedFiles(urlJobId: string, limit, lastEvalKey);
-//   console.log("getTableProvider received data:")
-//   console.dir(data)
-//   return data;
-// }
-
-// const filePageSize = 20
 
 function JobForm() {
   const urlParams = useParams()
   const path: string = window.location.hash;
-  const [jobId, setJobId] = useState(null);
-  const [jobType, setJobType] = useState(null);
+  const [confirmationModal, setConfirmationModal] = useState<typeof DeleteConfirmationModal | null>(null)
+  const [jobId, setJobId] = useState<string>();
+  const [jobType, setJobType] = useState<JobType>(JobType.LLMS);
   const [name, setName] = useState('');
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [createdAt, setCreatedAt] = useState('');
@@ -39,10 +28,12 @@ function JobForm() {
   const [isUpdate, setIsUpdate] = useState(true);
   const [submitDisabled, setSubmitDisabled] = useState(true)
   const [uploadedFiles, setUploadedFiles] = useState([])
+  const [alerts, setAlerts] = useState<typeof Alert[]>([])
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   useEffect(() => {
     (async () => {
-      if (path === '#/jobs/create') {
+      if (path.endsWith('/create')) {
         if (!jobId && isLoading) {
           // Check if there's a cached jobId
           const cachedJobId = await Cache.getItem('current_job_id');
@@ -57,23 +48,35 @@ function JobForm() {
             Cache.setItem('current_job_id', newJobId);
             console.log('created new jobId: ' + newJobId);
           }
-          
           setIsUpdate(false);
           setIsLoading(false);
         }
       }
       else {
-          if (jobId) {
-            setIsUpdate(false)
+        if (path.endsWith('/edit') || path.endsWith('/delete')) {
+          console.log("This is an update or delete.")
+          setIsUpdate(true)
+          if (!jobId && isLoading) {
+              setJobId(urlParams.id ?? '');
+              setIsLoading(false);
           }
-          if (urlParams.id) {
-              setJobId(urlParams.id);
-              console.log('got jobId from urlParams: ' + urlParams.id);
-              setIsUpdate(true);
-          }
+        }
       }
     })()
   }, [])
+
+  useEffect(() => {
+    if (path.endsWith('/delete') && name) {
+      confirmDeleteJob(name)
+    }
+  },[name])
+
+  useEffect(() => {
+    if (jobId) {
+      console.log(`got jobId ${jobId}`)
+      setIsLoading(false)
+    }
+  }, [jobId])
 
   useEffect(() => {
     if (jobType) {
@@ -91,64 +94,27 @@ function JobForm() {
   
   useEffect(() => {
     (async () => {
-      if (jobId) {
+      if (jobId && isUpdate) {
+        console.log(`got jobId ${jobId} for update`);
+        try {
+          const jobData = await GetJob(jobId);
+          if (jobData) {
+            setName(jobData.name || '');
+            setJobType(jobData.jobType);
+            setSelectedModels(jobData.selectedModels ? JSON.parse(jobData.selectedModels) : []);
+            setCreatedAt(jobData.createdAt || '');
+            setLastUpdatedAt(jobData.lastUpdatedAt || '');
+            setRagIngestionStatus(jobData.ragIngestionStatus);
+          }
+        } catch (error) {
+          console.error('Error fetching job data:', error);
+        }
+        setIsLoading(false);
+      } else if (jobId) {
         console.log(`got jobId ${jobId}`);
-        // let result = await ListJobs()
-        // console.log(`Got object data result: `)
-        // console.dir(result)
         setIsLoading(false)
-        // for (let i = 0; i < result.length; i++) {
-        //   let tmpCollection = result[i]
-        //   console.log("Got tmpCollection")
-        //   console.dir(tmpCollection)
-        //   console.log(`enrichmentPipelines == ${JSON.stringify(tmpCollection.enrichment_pipelines)}`)
-        //   // console.log(`tmpCollection.enrichment_pipelines.entity_extraction.enabled = ${tmpCollection.enrichment_pipelines.entity_extraction.enabled}`)
-        //   // tmpCollection.enrichment_pipelines = tmpCollection.enrichment_pipelines.replaceAll(': True', ': true').replaceAll("'", "\"")
-        //   // console.log(`tmpCollection.enrichment_pipelines before JSON.parse = ${tmpCollection.enrichment_pipelines}`)
-        //   // tmpCollection.enrichment_pipelines = JSON.parse(tmpCollection.enrichment_pipelines)
-        //   console.log(`tmpCollection.enrichment_pipelines after JSON.parse = ${JSON.stringify(tmpCollection.enrichment_pipelines)}`)
-        //   console.log(`tmpCollection.collection_id: ${tmpCollection.collection_id} == urlJobId ${urlJobId}? ${tmpCollection.collection_id === urlJobId}`)
-        //   console.log(`does collection_id ${tmpCollection.collection_id} === urlJobId ${urlJobId}?`)
-        //   if (tmpCollection.collection_id === urlJobId) {
-        //     let tmpCollectionObj = new Job(
-        //       tmpCollection.user_email,
-        //       tmpCollection.collection_name,
-        //       tmpCollection.description,
-        //       tmpCollection.vector_db_type,
-        //       tmpCollection.vector_ingestion_enabled,
-        //       tmpCollection.file_storage_tool_enabled,
-        //       tmpCollection.collection_id,
-        //       tmpCollection.shared_with,
-        //       tmpCollection.enrichment_pipelines,
-        //       tmpCollection.graph_schema,
-        //       tmpCollection.created_date,
-        //       tmpCollection.updated_date,
-        //     ) 
-        //     console.log("Converted to Job:")
-        //     console.dir(tmpCollectionObj)
-        //     console.log(`Got match for collection ${tmpCollectionObj.json()}}`)
-        //     // setCurrentCollection(tmpCollection)
-        //     // setCollectionName(tmpCollection.collection_name.trim());
-        //     // setCollectionDescription(tmpCollection.description.trim());
-        //     let sharedList = []
-        //     tmpCollectionObj.shareList.forEach(email => {
-        //       sharedList.push({
-        //         "key": email
-        //       })
-        //     })
-        //     setCurrentCollection(tmpCollectionObj)
-        //     // setCollectionShareList(sharedList)
-        //     console.log('tmpCollectionObj')
-        //     console.dir(tmpCollectionObj)
-        //     break;
-        //   }
-        // }
-      }
-      else {
-        // console.log("Collection ID is " + urlJobId)
       }
     })()
-    // console.log('selectedVectorEngine: '+ selectedVectorEngine['label']);
   }, [jobId])
 
   // useEffect( () => {
@@ -198,6 +164,45 @@ function JobForm() {
   //   setDeleteModalVisible(false)
   // }
 
+  function confirmDeleteJob(name: string) {
+    // console.log('confirmDeleteFile received event')
+    // console.dir(selectedFileUpload)
+    // console.log(`confirming delete file ${selectedFileUpload['file_name']}`)
+    setConfirmationModal(
+      <DeleteConfirmationModal
+        message={createDeleteMessage(name)}
+        confirmationCallback={deleteJob}
+        // deleteRedirectLocation={window.location.href}
+        visible={true}
+      />
+    )
+    setDeleteModalVisible(true)
+    // evt.preventDefault()
+  }
+
+
+  function createDeleteMessage(jobName: string) {
+      let messages = (
+        <>
+          <p>Are you sure you want to delete this job?</p>
+          <p>Job Name: {jobName}</p>
+        </>
+      );
+      return messages;
+  }
+
+  async function deleteJob() {
+    if (jobId) {
+      await DeleteJob(jobId)
+      setDeleteModalVisible(false)
+      setConfirmationModal(null)
+      window.location.hash = '#/jobs'
+    }
+    // setTableReload(true)
+    // setIsLoading(true)
+    // reloadTable(evt)
+    // evt.preventDefault()
+  }
   function getLoadingPageContent() {
     return (
       <>
@@ -208,6 +213,11 @@ function JobForm() {
       </>
     )
   }
+
+  function hideAlerts() {
+    setAlerts([])
+  }
+  
   // Helper function to render model selection based on job type
   const ModelSelection = () => {
     if (!jobType) return null;
@@ -240,6 +250,7 @@ function JobForm() {
                         key={model}
                         checked={selectedModels.includes(model)}
                         onChange={() => handleModelSelect(model)}
+                        disabled={isUpdate}
                       >
                         {model}
                       </Checkbox>
@@ -258,6 +269,7 @@ function JobForm() {
 
     return (
       <>
+        {alerts}
         <form onSubmit={e => {
           e.preventDefault();
           sendData(e);
@@ -273,40 +285,20 @@ function JobForm() {
                 loading={isLoading}
                 variant="primary"
                 onClick={sendData}
+                disabled={isUpdate}
               >Save</Button>
-              {/* <Button 
-                id='confirmDeleteDocCollection'
-                formAction='none'
-                loading={isDeleting}
-                variant="normal"
-                // onClick={confirmDeleteCollection}
-              >Delete Job</Button> */}
             </SpaceBetween>
           }>
           <Container>
             <SpaceBetween key="sb1" direction="vertical" size="l">
-              {!isUpdate ?
-              <>
-                <FormField key='name' label="Job Name">
-                <Input
-                  key='name'
-                  onChange={({ detail }) => setName(detail.value)}
-                  value={ name ?? ''}
-                />
-                </FormField>
-              </>
-              : 
-              <>
-                <FormField key='name' label="Job Name">
-                <Input
-                  key='name'
-                  onChange={({ detail }) => setName(detail.value)}
-                  value={name ?? ''}
-                  disabled
-                />
-                </FormField>
-              </>
-              }
+              <FormField key='name' label="Job Name">
+              <Input
+                key='name'
+                onChange={({ detail }) => setName(detail.value)}
+                value={name ?? ''}
+                disabled={isUpdate}
+              />
+              </FormField>
               
               <FormField key='jobType' label="Job Type">
                 <RadioGroup
@@ -316,66 +308,107 @@ function JobForm() {
                     { value: "LLMS", label: "LLMs" },
                     { value: "EMBEDDINGS", label: "Embeddings" }
                   ]}
+                  readOnly={isUpdate}
                 />
               </FormField>
               
               {jobType && <ModelSelection />}
               
-              { jobId ?
-                <SpaceBetween size="l" key="sb2" >
-                <UploadedDocumentsTable
-                          jobId={jobId}
-                        ></UploadedDocumentsTable></SpaceBetween> : ''
-              }
+              <Tabs
+                tabs={[
+                  {
+                    label: "Upload Documents",
+                    id: "upload",
+                    content: (
+                      <Container>
+                        <SpaceBetween size="l">
+                          {jobId && <UploadedDocumentsTable isUpdate={isUpdate} jobId={jobId}/>}
+                        </SpaceBetween>
+                      </Container>
+                    )
+                  }
+                ]}
+              />
             </SpaceBetween>
           </Container>
         </Form>
       </form>
-        {/* {confirmationModal} */}
-      </>)
+      {confirmationModal}
+    </>)
   }
   async function sendData(evt: FormEvent<HTMLFormElement>){
     evt.preventDefault()
     // setIsLoading(true)
-    
-    if (jobId !== null) {
-      try {
-        // Create a new job using the Job object
-        const jobProps: JobProps = {
-          jobId: jobId,
-          jobType: jobType !== null ? jobType : JobType.LLMS,
-          // userId: 'current-user', // This would typically come from authentication
-          name: name,
-          selectedModels: JSON.stringify(selectedModels),
-          createdAt: new Date().toISOString(),
-          lastUpdatedAt: new Date().toISOString(),
-          files: [],
-          ragIngestionStatus: RagIngestionStatus.NOT_STARTED,
-          ragIngestionStatusMessage: '',
-          evalDatasetGenerationStatus: EvalDatasetGenerationStatus.NOT_STARTED,
-          evalDatasetGenerationStatusMessage: '',
-          evalDatasetApprovalStatus: EvalDatasetApprovalStatus.NOT_STARTED,
-          evalDatasetApprovalStatusMessage: '',
-          evalStatus: EvalStatus.NOT_STARTED,
-          evalStatusMessage: ''
-        };
-        console.log('creating job with props')
-        console.dir(jobProps)
+    try {
+      // Create a new job using the Job object
+      const jobProps: JobProps = {
+        id: jobId,
+        jobType: jobType !== null ? jobType : JobType.LLMS,
+        // userId: 'current-user', // This would typically come from authentication
+        name: name,
+        selectedModels: JSON.stringify(selectedModels),
+        createdAt: new Date().toISOString(),
+        lastUpdatedAt: new Date().toISOString(),
+        files: [],
+        ragIngestionStatus: RagIngestionStatus.NOT_STARTED,
+        ragIngestionStatusMessage: '',
+        evalDatasetGenerationStatus: EvalDatasetGenerationStatus.NOT_STARTED,
+        evalDatasetGenerationStatusMessage: '',
+        evalDatasetApprovalStatus: EvalDatasetApprovalStatus.NOT_STARTED,
+        evalDatasetApprovalStatusMessage: '',
+        evalStatus: EvalStatus.NOT_STARTED,
+        evalStatusMessage: ''
+      };
+      console.log('job props')
+      console.dir(jobProps)
+      if (isUpdate) {
+        const response = await UpdateJob(jobProps);
+        console.log("Job update response:", response);
+      }
+      else {
         const response = await CreateJob(jobProps);
         console.log("Job creation response:", response);
-        
-        // Clear the cached jobId since job was created successfully
-        Cache.removeItem('current_job_id');
-        
-        // Redirect to the job details page
-        if (!isUpdate) {
-          location.hash = `#/jobs/${jobId}`;
-        }
-      } catch (error) {
-        console.error("Error creating job:", error);
-      } finally {
-        setIsLoading(false);
       }
+      // Create JobFile records for uploaded files
+      if (jobId !== undefined) {
+        for (const file of uploadedFiles) {
+          const jobFileProps: JobFileProps = {
+            name: file.key,
+            ingestionStatus: 'NOT_STARTED',
+            vectorizationStatus: 'NOT_STARTED',
+            jobId: jobId
+          };
+          await CreateJobFile(jobFileProps);
+        }
+      }
+      
+      // Clear the cached jobId since job was created successfully
+      Cache.removeItem('current_job_id');
+      
+      // Redirect to the job details page
+      // if (!isUpdate) {
+      location.hash = `#/jobs/${jobId}/edit`;
+      setAlerts(
+        <Alert
+          dismissible
+          statusIconAriaLabel="Success"
+          type="success"
+          onDismiss={hideAlerts}
+        >
+          Your instance has been created successfully.
+        </Alert>
+      )
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth' // Optional: for smooth scrolling animation
+      });
+      setIsUpdate(true)
+      // }
+    } catch (error) {
+      console.error("Error creating job:", error);
+    } finally {
+      setIsLoading(false);
     }
   }
 

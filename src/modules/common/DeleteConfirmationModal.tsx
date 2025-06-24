@@ -7,20 +7,17 @@ import { Box, Button, FormField, Input, Modal, SpaceBetween, } from '@cloudscape
 function DeleteConfirmationModal(props: {
     message: any; 
     visible: any; 
-    resourceId: any; 
-    deleteFn: any; 
-    deleteRedirectLocation: any; 
-    evt: any 
+    confirmationCallback: any; 
+    // deleteRedirectLocation: any; 
+    // evt: any 
 }) {
     const [deleteConfirmation, setDeleteConfirmation] = useState('')
     const [deleteDisabled, setDeleteDisabled] = useState(true)
-    const [isDeleting, setIsDeleting] = useState(false)
     const [message] = useState(props.message)
     const [deleteModalVisible, setDeleteModalVisible] = useState(props.visible)
-    const [resourceId] = useState(props.resourceId)
-    const deleteFn = props.deleteFn
-    const deleteRedirectLocation = props.deleteRedirectLocation
-    const [evt] = useState(props.evt)
+    const confirmationCallback = props.confirmationCallback
+    // const deleteRedirectLocation = props.deleteRedirectLocation
+    // const [evt] = useState(props.evt)
 
     useEffect(() => {
         if (deleteConfirmation == 'confirm') {
@@ -31,15 +28,15 @@ function DeleteConfirmationModal(props: {
         }
       }, [deleteConfirmation])
 
-    const executeDelete = () => {
-        setIsDeleting(true)
-        // console.log('Delete clicked. EVT:')
-        // console.dir(evt)
-        deleteFn(resourceId, evt)
-        setIsDeleting(false)
-        setDeleteModalVisible(false)
-        location.href = deleteRedirectLocation
-    }
+    // const executeDelete = () => {
+    //     setIsDeleting(true)
+    //     // console.log('Delete clicked. EVT:')
+    //     // console.dir(evt)
+    //     deleteFn(resourceId, evt)
+    //     setIsDeleting(false)
+    //     setDeleteModalVisible(false)
+    //     location.href = deleteRedirectLocation
+    // }
 
     return (
         <Modal
@@ -49,14 +46,16 @@ function DeleteConfirmationModal(props: {
               <Box float="right">
                 <SpaceBetween direction="horizontal" size="xs">
                   <Button 
-                    onClick={() => setDeleteModalVisible(false)}
+                    onClick={() => {
+                      window.location.hash = '#/jobs';
+                      setDeleteModalVisible(false);
+                    }}
                     variant="link"
                   >Cancel</Button>
                   <Button 
-                    onClick={executeDelete}
+                    onClick={confirmationCallback}
                     disabled={deleteDisabled} 
                     variant="primary"
-                    loading={isDeleting}
                   >
                     Delete
                   </Button>

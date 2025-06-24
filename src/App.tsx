@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import AppRoutes from './AppRoutes';
-import { AppLayout, Header, SideNavigation } from '@cloudscape-design/components';
+import { AppLayout, SideNavigation } from '@cloudscape-design/components';
+import Header, {HeaderProps} from "@cloudscape-design/components/header";
 
 import '@aws-amplify/ui-react/styles.css';
 import "@cloudscape-design/global-styles/index.css";
@@ -25,7 +26,8 @@ function App() {
             >
                 Welcome, {user.signInDetails?.loginId}
             </Header>
-            <AppRoutes signOut={signOut}/>
+            <AppRoutes />
+            {/* <AppRoutes signOut={signOut}/> */}
         </>
       }
       navigation={<SideNavigation 

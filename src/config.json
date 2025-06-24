@@ -25,12 +25,6 @@
                 "dimensions": 3072
             },
             "openai_key": "PUT YOUR KEY HERE"
-        },
-        "custom": {
-            "distilled-qwen": {
-                "type": "sagemaker",
-                "endpoint": "example_endpoint_url"
-            }
         }
     },
     "llms": {

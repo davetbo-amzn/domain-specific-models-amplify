@@ -1,0 +1,20 @@
+FROM public.ecr.aws/lambda/python:3.12
+
+RUN dnf install -y poppler poppler-cpp poppler-devel poppler-glib poppler-cpp-devel poppler-utils gcc-c++
+
+RUN mkdir -p /var/task/ingestion_service/loaders
+RUN mkdir -p /var/task/ingestion_service/utils
+RUN mkdir -p /var/task/ingestion_service/bedrock_provider
+COPY ingestionService/src/ingestion_service/requirements.txt /var/task/ingestion_service
+COPY ingestionService/src/ingestion_service/loaders/pdf_image_loader_requirements.txt /var/task/ingestion_service/loaders/
+COPY ingestionService/src/ingestion_service/loaders/docx_loader_requirements.txt /var/task/ingestion_service/loaders/
+COPY shared/utils/requirements.txt /var/task/ingestion_service/utils/
+COPY shared/bedrock_provider/requirements.txt /var/task/ingestion_service/bedrock_provider/
+RUN pip3 install -t /var/task -r /var/task/ingestion_service/requirements.txt
+RUN pip3 install -t /var/task -r /var/task/ingestion_service/loaders/docx_loader_requirements.txt
+RUN pip3 install -t /var/task -r /var/task/ingestion_service/loaders/pdf_image_loader_requirements.txt
+RUN pip3 install -t /var/task -r /var/task/ingestion_service/utils/requirements.txt
+RUN pip3 install -t /var/task -r /var/task/ingestion_service/bedrock_provider/requirements.txt
+COPY shared /var/task/ingestion_service/
+COPY ingestionService/src/ingestion_service /var/task/ingestion_service/
+CMD [ "ingestion_service.ingestion_service.handler" ]

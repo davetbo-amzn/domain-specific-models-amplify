@@ -16,7 +16,7 @@ import JobForm from './modules/jobs/JobForm';
 
 class AppRoutes extends Component {
     signOut: any;
-    
+    // constructor(props: {}) {
     constructor(props: { signOut: any; }) {
       super(props)
       this.signOut = props.signOut;
@@ -30,13 +30,14 @@ class AppRoutes extends Component {
             <Route path='/' element={<JobsTable/>}/>
             <Route path='/jobs' element={<JobsTable/>}/>
             <Route path='/jobs/create' element={<JobForm/>}/>
-            <Route path='/jobs/:id' element={<JobForm/>}/>
+            <Route path='/jobs/:id/edit' element={<JobForm/>}/>
+            <Route path='/jobs/:id/delete' element={<JobForm/>}/>
 
             {/* <Route path='/chat-playground' element={<ChatPlayground updateSplitPanelContent={this.updateSplitPanelContent} className="chatPlayground"/>}/>
             <Route path='/document-collections' element={<DocumentCollectionsTable className="documentCollectionsTable"/>}/>
             <Route path='/document-collections/create' element={<DocumentCollectionForm className="documentCollectionsForm"/>}/>
             <Route path='/document-collections/:id/edit' element={<DocumentCollectionForm className="documentCollectionsForm"/>}/> */}
-            {/* <Route path='/logout' element={<LogOut signout={this.signOut}/>}/> */}
+            {/* <Route path='/logout' element={<LogOut/>}/> */}
             {/* <Route path='/graph-visualization' element={<GraphVisualization className="graphVisualization"/>}/>
             <Route path='/prompt-templates' element={<PromptTemplatesTable className="promptTemplatesTable"/>}/>
             <Route path='/prompt-templates/create' element={<PromptTemplateForm className="promptTemplatesForm"/>}/>

@@ -1,0 +1,11 @@
+.jobModels {
+    word-wrap: break-word;
+    max-width: 300px;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: auto;
+}
+.jobsTable {
+    table-layout: auto;
+    width: 100%;
+}

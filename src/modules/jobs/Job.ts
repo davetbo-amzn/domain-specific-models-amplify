@@ -2,6 +2,8 @@ import { generateClient } from 'aws-amplify/data';
 import { type Schema } from '../../../amplify/data/resource';
 import { v4 as uuidv4 } from 'uuid';
 import { JobFile } from './JobFile';
+import { DeleteJobFiles } from './JobFile';
+
 
 const client = generateClient<Schema>();
 
@@ -38,7 +40,7 @@ export enum RagIngestionStatus {
 }
 
 export type JobProps = {
-    jobId: string;
+    id: string;
     jobType: JobType;
     // userId: string;
     name: string;
@@ -56,43 +58,6 @@ export type JobProps = {
     evalStatusMessage: string;
 };
 
-// export function Job(props: JobProps) {
-//     console.log('Job props', props)
-//     // const [job, setJob] = useState<JobProps | null>(null);
-
-//     useEffect(() => {
-//         if (! jobId) {
-//             setJobId(uuidv4());
-//         }
-//     }, []);
-
-//     useEffect(() => {
-//         if (jobId && userId && name && selectedModels && files) {
-//             const newJob: JobProps = {
-//                 jobId,
-//                 jobType,
-//                 userId,
-//                 name,
-//                 selectedModels,
-//                 createdAt,
-//                 lastUpdatedAt,
-//                 files, 
-//                 ragIngestionStatus,
-//                 ragIngestionStatusMessage,
-//                 evalDatasetGenerationStatus,
-//                 evalDatasetGenerationStatusMessage,
-//                 evalDatasetApprovalStatus,
-//                 evalDatasetApprovalStatusMessage,
-//                 evalStatus,
-//                 evalStatusMessage
-//             };
-//             client.models.JobFile.create(newJob);
-//             console.log('newJob', newJob);
-//             // setJob(newJob);
-//         }
-//     }, [jobId, jobType, userId, name, selectedModels, files])
-// }
-
 export async function CreateJob(job: JobProps) {
     console.log("in CreateJob");
     const {data: response} = await client.models.Job.create(job);
@@ -109,6 +74,27 @@ export async function ListJobs() {
     return response;
 }
 
+export async function GetJob(id: string) {
+    console.log("in GetJob with id:", id);
+    const {data: response} = await client.models.Job.get({id});
+    console.log("got response from getJob:");
+    console.dir(response);
+    return response;
+}
+
+export async function UpdateJob(job: JobProps) {
+    console.log("in UpdateJob");
+    const {data: response} = await client.models.Job.update(job);
+    console.log("got response from update job:");
+    console.dir(response);
+    return response;
+}
+
+export async function DeleteJob(id: string) {
+    await DeleteJobFiles(id);
+    const response = await client.models.Job.delete({id});
+    return response;
+}
 
 // export default Job;
 

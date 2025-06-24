@@ -3,13 +3,14 @@
 
 import { useEffect, useState } from 'react'
 import { Button, Container, Form, Header, Input, Link, SpaceBetween, Table } from '@cloudscape-design/components'
-
+import { getUrl } from 'aws-amplify/storage';
 import { JobProps } from './Job';
-import { JobFile, JobFileProps, ListJobFiles } from './JobFile';
+import { CreateJobFile, DeleteJobFiles, JobFileProps, ListJobFiles } from './JobFile';
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal'
 import { ThemeProvider } from '@aws-amplify/ui-react';
 import { FileUploader } from '@aws-amplify/ui-react-storage';
 import '@aws-amplify/ui-react/styles.css';
+import { JSX } from 'react/jsx-runtime';
 
 
 const filePageSize = 20
@@ -26,31 +27,15 @@ const uploaderTheme = {
     }
   }
 }
-// async function getTableProvider(collectionId, limit=20, lastEvalKey='') {
-//   //// // console.log("newApi:")
-//   //// // console.dir(provider)
-//   const data = await api.listUploadedFiles(collectionId, limit, lastEvalKey);
-//   // // console.log("getTableProvider received data:")
-//   // // console.dir(data)
-//   return data;
-// }
+
 
 const UPLOADED_DOCUMENTS_COLUMN_DEFINITIONS = [
     {
-      id: 'key',
-      header: 'File Name',
-      cell: (item: JobFileProps) => <Link /*onClick={item.onClick}*/>{item.location}</Link>,
-      key: (item: JobFileProps) => item.key,
-      isRowHeader: false,
-      // isItemDisabled: (item: { hasOwnProperty: (arg0: string) => any; disabled: any; }) => item.hasOwnProperty('disabled') ? item.disabled : false
-    },
-    {
       id: 'name',
       header: 'File Name',
-      cell: (item: JobFileProps) => <Link /*onClick={item.onClick}*/>{item.location}</Link>,
-      key: (item: JobFileProps) => item.name,
+      cell: (item: JobFileProps) => <Link external href={item.url}>{item.name}</Link>,
       isRowHeader: true,
-      // isItemDisabled: (item: { hasOwnProperty: (arg0: string) => any; disabled: any; }) => item.hasOwnProperty('disabled') ? item.disabled : false
+      isItemDisabled: false  // (item: { hasOwnProperty: (arg0: string) => any; disabled: any; }) => item.hasOwnProperty('disabled') ? item.disabled : false
     },
     {
       id: 'ingestionStatus',
@@ -67,65 +52,68 @@ const UPLOADED_DOCUMENTS_COLUMN_DEFINITIONS = [
 ];
 
 type UploadedFile = {
-  key: string,
   name: string,
-  location: string,
   ingestionStatus: string,
   vectorizationStatus: string,
-  jobId: string
+  jobId: string,
+  url: string
 }
 
+function createDeleteMessage(files: UploadedFile[]) {
+    let filenames: string | number | JSX.Element[] = []
+    files.forEach(file => {
+      filenames.push(<li key={file.name}>{file.name}</li>);
+    })
+    let messages = (
+    <>
+      <p>Are you sure you want to delete these files?</p>
+      <ul>
+      {filenames}
+      </ul>
+    </>
+    );
+    return messages;
+}
 
-function UploadedDocumentsTable(props: { jobId: string; }) {
+function UploadedDocumentsTable(props: { jobId: string, isUpdate: boolean }) {
   const jobId: string = props.jobId;
-  // const [confirmationModal, setConfirmationModal] = useRecoilState(confirmationModalState)
+  const [confirmationModal, setConfirmationModal] = useState<typeof DeleteConfirmationModal | null>(null)
   // const currentCollection = useRecoilValue(currentCollectionState)
-  // const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [filesVal, setFilesVal] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   // const [lastEvalKey, setLastEvalKey] = useState(null)
   // const [selectedFileUpload, setSelectedFileUpload] = useRecoilState(selectedFileUploadState)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  
+  const [selectedFiles, setSelectedFiles] = useState<UploadedFile[]>([]);
+  const [deleteConfirmationMessage, setDeleteConfirmationMessage] = useState('')
+  const [tableReload, setTableReload] = useState(false)
+  // TO DO fix this back to isUpdate.
+  const uploadsDisabled = false // props.isUpdate
+
+
+  useEffect(() => {
+    if (tableReload) {
+      setTimeout(() => {
+        console.log("Delayed for 1 second.");
+        reloadTable()
+        setTableReload(false)
+      }, 500);
+      
+    }
+  }, [tableReload])
+
+
+  useEffect(() => {
+    setDeleteConfirmationMessage(createDeleteMessage(selectedFiles))
+  }, [selectedFiles])
+
+
   useEffect(() => {
     if (jobId) {
       (async () => {
         setIsLoading(true)
-        let response = await ListJobFiles(jobId)
-        console.log("Got ListJobFiles response:")
-        console.dir(response)
-        let tableData: UploadedFile[] = []
-        response.forEach(tmpJobFile => {
-          let tmpFile: UploadedFile = {
-            key: tmpJobFile.jobFileId ?? '',
-            name: tmpJobFile.name,
-            location: tmpJobFile.location,
-            ingestionStatus: tmpJobFile.ingestionStatus ?? 'NOT_STARTED',
-            vectorizationStatus: tmpJobFile.vectorizationStatus ?? 'NOT_STARTED',
-            jobId: tmpJobFile.jobId ?? ''
-          }
-          tableData.push(tmpFile)
-        })
-        // if (!tmpFiles || tmpFiles.length == 0) {
-        //   tmpFiles  = [{
-        //     name: "No files uploaded yet.",
-        //     location: "none"
-        //     ingestionStatus: "",
-        //     vectorizationStatus: "",
-        //   }]
-        // }
-        // else {
-        //   console.dir(tmpFiles)
-        //   for (let i = 0; i < tmpFiles.length; i++) {
-        //     tmpFiles[i].key = `tmpFile_${i}`
-        //     // tmpFiles[i].onClick = async () => await api.downloadFile(
-        //     //   jobId,
-        //     //   tmpFiles[i].file_name
-        //     // );
-        //   }
-        // }
-        setUploadedFiles(tableData)
-        setIsLoading(false)
+        formatTableData()
       })()
     }
   }, [jobId])
@@ -216,42 +204,91 @@ function UploadedDocumentsTable(props: { jobId: string; }) {
   //   })()
   // }, [currentCollection, filesVal])
 
-  // function confirmDeleteFile(evt: unknown) {
-  //   // console.log('confirmDeleteFile received event')
-  //   // console.dir(selectedFileUpload)
-  //   // console.log(`confirming delete file ${selectedFileUpload['file_name']}`)
-  //   setConfirmationModal(
-  //     <DeleteConfirmationModal
-  //       message={deleteConfirmationMessage}
-  //       deleteFn={deleteFile}
-  //       evt={evt}
-  //       deleteRedirectLocation={window.location.href}
-  //       resourceId={selectedFileUpload['file_name']}
-  //       visible={true}
-  //     />
-  //   )
-  //   setDeleteModalVisible(true)
-  //   evt.preventDefault()
-  // }
+  function confirmDeleteFile(evt: unknown) {
+    // console.log('confirmDeleteFile received event')
+    // console.dir(selectedFileUpload)
+    // console.log(`confirming delete file ${selectedFileUpload['file_name']}`)
+    setConfirmationModal(
+      <DeleteConfirmationModal
+        message={deleteConfirmationMessage}
+        confirmationCallback={deleteFiles}
+        deleteRedirectLocation={window.location.href}
+        visible={true}
+      />
+    )
+    setDeleteModalVisible(true)
+    evt.preventDefault()
+  }
+  
+  async function deleteFiles() {
+    await DeleteJobFiles(jobId, selectedFiles)
+    setDeleteModalVisible(false)
+    setConfirmationModal(null)
+    setSelectedFiles([])
+    setTableReload(true)
+    // setIsLoading(true)
+    // reloadTable(evt)
+    // evt.preventDefault()
+  }
 
-  // async function deleteFile(resourceId: any, evt: any) {
-  //   await api.deleteFile(
-  //     currentCollection.collectionId, 
-  //     resourceId
-  //   )
-  //   setDeleteModalVisible(false)
-  //   setConfirmationModal('')
-  //   setSelectedFileUpload('')
-  //   // setIsLoading(true)
-  //   reloadTable(evt)
-  //   // evt.preventDefault()
-  // }
+  async function formatTableData() {
+    let response = await ListJobFiles(jobId)
+    console.log("Got ListJobFiles response:")
+    console.dir(response)
+    let tableData: UploadedFile[] = []
+    response.forEach(async tmpJobFile => {
+      const {url} = await getUrl({ path: ({identityId}) => `private/${identityId}/jobs/${jobId}/${tmpJobFile.name}`})
+      // const {url} = await getUrl({path: `private/{identity_id}/${jobId}/${tmpJobFile.name}`})
+      console.log("Got URL:")
+      console.dir(url)
+      let tmpFile: UploadedFile = {
+        name: tmpJobFile.name,
+        ingestionStatus: tmpJobFile.ingestionStatus ?? 'NOT_STARTED',
+        vectorizationStatus: tmpJobFile.vectorizationStatus ?? 'NOT_STARTED',
+        jobId: tmpJobFile.jobId ?? '',
+        url: url.toString()
+      }
+      console.log("Saving row to table.")
+      console.dir(tmpFile)
+      tableData.push(tmpFile)
+    })
+    setUploadedFiles(tableData)
+    setIsLoading(false)
+    // let tableData: UploadedFile[] = []
+    // jobFiles.forEach(tmpJobFile => {
+    //   let tmpFile: UploadedFile = {
+    //     name: tmpJobFile.name,
+    //     ingestionStatus: tmpJobFile.ingestionStatus ?? 'NOT_STARTED',
+    //     vectorizationStatus: tmpJobFile.vectorizationStatus ?? 'NOT_STARTED',
+    //     jobId: tmpJobFile.jobId ?? '',
+    //     url: ''
+    //   }
+    //   tableData.push(tmpFile)
+    // })
+    // return tableData
+  }
 
-  function reloadTable(evt: undefined) {
+  async function processFile(file: { key?: any; }) {
+    console.log("Processing file:");
+    console.dir(file);
+    console.dir(Object.keys(file));
+    
+    const response = await CreateJobFile({
+      jobId, 
+      name: file.key,
+      ingestionStatus: 'NOT_STARTED',
+      vectorizationStatus: 'NOT_STARTED'
+    })
+    console.log("CreateJobFile response:")
+    console.dir(response)
+    setTableReload(true)
+    return file
+  }
+
+  function reloadTable(/*evt: undefined*/) {
     (async () => {
       setIsLoading(true)
-      let tmpFiles = await ListJobFiles(jobId);
-      setUploadedFiles(tmpFiles)
+      await formatTableData()
       setIsLoading(false)
     })()
     // evt.preventDefault()
@@ -269,20 +306,20 @@ function UploadedDocumentsTable(props: { jobId: string; }) {
   //   return false
   // }
 
-  function updateFilesVal(files: Record<string, any>) {
-    // setIsLoading(true)
-    console.log('Update files received:')
-    let tmpUploadedFiles = [...uploadedFiles]
-    console.dir(files)
-    for (let i = 0; i < files.length; i++) {
-      files[i].key = `uploaded_file ${i}`
-    }
-    setFilesVal(files);
-    reloadTable()
-    // // console.log("filesVal is now");
-    // // console.dir(files)
-    // setIsLoading(false)
-  }
+  // function updateFilesVal(files: Record<string, any>) {
+  //   // setIsLoading(true)
+  //   console.log('Update files received:')
+  //   let tmpUploadedFiles = [...uploadedFiles]
+  //   console.dir(files)
+  //   for (let i = 0; i < files.length; i++) {
+  //     files[i].key = `uploaded_file ${i}`
+  //   }
+  //   setFilesVal(files);
+  //   reloadTable()
+  //   // // console.log("filesVal is now");
+  //   // // console.dir(files)
+  //   // setIsLoading(false)
+  // }
 
   // async function uploadFiles() {
   //   setIsLoading(true)
@@ -301,32 +338,36 @@ function UploadedDocumentsTable(props: { jobId: string; }) {
   //   }
   //   setIsLoading(false)
   // }
-
+  
   return (
     <>
     <SpaceBetween direction='vertical' size='xs'>
       <ThemeProvider theme={uploaderTheme}>
+        { ! uploadsDisabled ? (
+          <>
         <h4>Upload Files</h4>
         <FileUploader    
           acceptedFileTypes={['*/*']}   
-          path={({ identityId }) => `private/${identityId}/jobs/${jobId}/`}
+          path={({ identityId }) => `private/${identityId}/jobs/${jobId}/inputs/`}
           maxFileCount={1000}
           isResumable={true}
-          onSuccess={() => reloadTable(undefined)}
+          processFile={processFile}
         /> 
+        </>
+        ) : null}
       </ThemeProvider>
         <Table
           loadingText="Loading uploaded documents list."
           columnDefinitions={UPLOADED_DOCUMENTS_COLUMN_DEFINITIONS}
           items={uploadedFiles}
-          selectionType="single"
+          selectionType="multi"
           loading={isLoading}
-          // selectedItems={[selectedFileUpload]}
-          // onSelectionChange={({detail}) => {
-          //   // // console.log("Selected file:")
-          //   // // console.dir(detail.selectedItems[0])
-          //   setSelectedFileUpload(detail.selectedItems[0])
-          // }}
+          selectedItems={selectedFiles}
+          onSelectionChange={({detail}) => {
+            // // console.log("Selected file:")
+            // // console.dir(detail.selectedItems[0])
+            setSelectedFiles(detail.selectedItems)
+          }}
           header={
             <Header
               actions={
@@ -339,10 +380,10 @@ function UploadedDocumentsTable(props: { jobId: string; }) {
                   >
                     Upload
                   </Button> */}
-                  {/* <Button onClick={confirmDeleteFile} 
-                    disabled={selectedFileUpload === ''}>
+                  <Button onClick={confirmDeleteFile} 
+                    disabled={selectedFiles.length === 0}>
                     Delete file
-                  </Button> */}
+                  </Button>
                 </SpaceBetween>
               }
               variant="h4"
@@ -352,7 +393,7 @@ function UploadedDocumentsTable(props: { jobId: string; }) {
           }
         ></Table>
       </SpaceBetween>
-      {/* {confirmationModal} */}
+      {confirmationModal}
     </>
   )
 }

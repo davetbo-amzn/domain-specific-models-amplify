@@ -1,0 +1,38 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "us-east-1",
+      "eventTime": "2024-01-15T10:30:00.000Z",
+      "userIdentity": {
+        "principalId": "EXAMPLE"
+      },
+      "requestParameters": {
+        "sourceIPAddress": "127.0.0.1"
+      },
+      "responseElements": {
+        "x-amz-request-id": "EXAMPLE123456789",
+        "x-amz-id-2": "EXAMPLE123/5678abcdefghijklambdaisawesome/mnopqrstuvwxyzABCDEFGH"
+      },
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "configurationId": "testConfigRule",
+        "bucket": {
+          "name": "amplify-domainmodelevals1-jobsinputfilesbucket9fb2-r4v4bd2ikk0c",
+          "arn": "arn:aws:s3:::amplify-domainmodelevals1-jobsinputfilesbucket9fb2-r4v4bd2ikk0c",
+          "ownerIdentity": {
+            "principalId": "EXAMPLE"
+          }
+        },
+        "object": {
+          "key": "private/test_user_id/test_job_id/asthma_crawl_sample.jsonl",
+          "size": 1024,
+          "eTag": "0123456789abcdef0123456789abcdef",
+          "versionId": "096fKKXTRTtl3on89fVO.nfljtsv6qko",
+          "sequencer": "0A1B2C3D4E5F678901"
+        }
+      }
+    }
+  ]
+}

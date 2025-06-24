@@ -7,6 +7,7 @@ import {
     Button,
     ButtonDropdown,
     Container,
+    ExpandableSection,
     FileUpload,
     FormField,
     Header,
@@ -16,6 +17,8 @@ import {
 } from '@cloudscape-design/components';
 
 import  { Job, JobProps, ListJobs} from './Job';
+import './job.css';
+
 
 import { 
     JobType,
@@ -31,14 +34,21 @@ const COLUMN_DEFS = [
         id: 'jobName',
         header: 'Job Name',
         cell: (item: { name: string; }) => item.name,
-        key: (item: { jobId: string; }) => item.jobId,
+        key: (item: { id: string; }) => item.id,
         isRowHeader: true
     },
     {
         id: 'jobType',
         header: 'Type',
         cell: (item: JobProps ) => item.jobType,
-        key: (item: { jobId: string; }) => item.jobId,
+        key: (item: { id: string; }) => item.id,
+        isRowHeader: true
+    },
+    {
+        id: 'ragIngestionStatus',
+        header: 'RAG Ingestion Status',
+        cell: (item: { ragIngestionStatus: typeof RagIngestionStatus; }) => item.ragIngestionStatus,
+        key: (item: { id: string; }) => item.id,
         isRowHeader: true
     },
     {
@@ -46,31 +56,29 @@ const COLUMN_DEFS = [
         header: 'Selected Models',
         cell: (item: { selectedModels: string; }) => {
             return (
-                `${Object.keys(JSON.parse(item.selectedModels))?.length || 0} selected`
+                // <ExpandableSection variant="footer" headerText="Selected Models">
+                <div className="jobModels">
+                    {JSON.parse(item.selectedModels).join(", ")}
+                </div>
+                // </ExpandableSection>
             )
         },
-        key: (item: { jobId: string; }) => item.jobId,
-        isRowHeader: true
+        key: (item: { id: string; }) => item.id,
+        isRowHeader: true,
+        minWidth: 400
     },
     {
         id: 'lastUpdatedAt',
         header: 'Last Updated',
         cell: (item: { lastUpdatedAt: string[]; }) => item.lastUpdatedAt,
-        key: (item: { jobId: string; }) => item.jobId,
-        isRowHeader: true
-    },
-    {
-        id: 'ragIngestionStatus',
-        header: 'RAG Ingestion Status',
-        cell: (item: { ragIngestionStatus: typeof RagIngestionStatus; }) => item.ragIngestionStatus,
-        key: (item: { jobId: string; }) => item.jobId,
+        key: (item: { id: string; }) => item.id,
         isRowHeader: true
     },
     {
         id: 'createdAt',
         header: 'Created',
         cell: (item: { createdAt: string | number | Date; }) => new Date(item.createdAt).toLocaleString(),
-        key: (item: { jobId: string; }) => item.jobId,
+        key: (item: { id: string; }) => item.id,
         isRowHeader: true
     }
 ]
@@ -82,13 +90,14 @@ function JobsTable() {
     const [tableLoadingState, setTableLoadingState] = useState(true)
     const [currentJob, setCurrentJob] = useState({})
 
+    
     useEffect(() => {
         (async () => {
             setTableLoadingState(true)
             const jobsResponse = await ListJobs();
             console.log('jobsResponse:')
             console.dir(jobsResponse)
-            setJobs(jobsResponse)
+            setTableData(jobsResponse)
             // setTableData(jobs)
             setTableLoadingState(false)
         })()
@@ -115,9 +124,10 @@ function JobsTable() {
                 loading={tableLoadingState}
                 selectionType="single"
                 selectedItems={[selectedItem]}
-                // onSelectionChange={({ detail }) =>
-                //     showDetails(detail.selectedItems[0])
-                // }
+                onSelectionChange={({ detail }) =>
+                    setSelectedItem(detail.selectedItems[0] || {})
+                }
+                trackBy="id"
                 // isItemDisabled={item =>{
                 // // console.log("Got item")
                 // // console.dir(item)
@@ -130,14 +140,23 @@ function JobsTable() {
                     actions={
                     <SpaceBetween direction="horizontal" size="xs">
                         <ButtonDropdown
+                        disabled={!(selectedItem && selectedItem.id)}
                         items={[
                             {
-                            id: "edit",
-                            // disabled: !currentCollection,
-                            text: "Edit or delete job",
-                            href: `/#/jobs/${currentJob ? currentJob.jobId : 'none'}/edit`,
-                            // external: true,
-                            // externalIconAriaLabel: "(opens in new tab)"
+                                id: "edit",
+                                // disabled: !currentCollection,
+                                text: "View/Edit job",
+                                href: `/#/jobs/${selectedItem !== null ? selectedItem.id : 'none'}/edit`,
+                                // external: true,
+                                // externalIconAriaLabel: "(opens in new tab)"
+                            },
+                            {
+                                id: "delete",
+                                // disabled: !currentCollection,
+                                text: "Delete job",
+                                href: `/#/jobs/${selectedItem ? selectedItem.id : 'none'}/delete`,
+                                // external: true,
+                                // externalIconAriaLabel: "(opens in new tab)"
                             }
                         ]}
                         >

@@ -1,6 +1,29 @@
 {
-  "acknowledged-issue-numbers": [
-    32775,
-    32775
-  ]
+	"acknowledged-issue-numbers": [
+		32775,
+		32775
+	],
+	"@aws-cdk/aws-ec2:bastionHostUseAmazonLinux2023ByDefault": true,
+	"removal_policy": "DESTROY",
+	"user_pool_domain_prefix": "dsme",
+	"app_name": "Domain-Specific Model Evaluation",
+	"embeddings_model_id": "amazon.titan-embed-text-v2:0",
+	"extraction_model_id": "anthropic.claude-3-5-haiku-20241022-v1:0",
+	"ocr_model_id": "anthropic.claude-3-5-haiku-20241022-v1:0",
+	"allowed_email_domains": "amazon.com",
+	"verification_email_subject": "Verify your email for the Domain-Specific Model Evaluation & Customization application",
+	"verification_email_body": "Thanks for signing up for the Domain-Specific Model Evaluation & Customization application! Your verification code is {{####}}",
+	"os_data_instance_ct": 1,
+	"os_data_instance_type": "m6g.large.search",
+	"os_data_instance_volume_size_gb": 100,
+	"os_master_instance_ct": 0,
+	"os_master_instance_type": "",
+	"os_multiaz_with_standby_enabled": false,
+	"os_dashboards_ec2_cert_country": "US",
+	"os_dashboards_ec2_cert_state": "AnyState",
+	"os_dashboards_ec2_cert_city": "AnyCity",
+	"os_dashboards_ec2_cert_hostname": "osdashboard-proxy.mydomain.com",
+	"os_dashboards_ec2_cert_email_address": "admin@mydomain.com",
+	"os_dashboards_ec2_enable_traffic_from_ip": "127.0.0.1/32",
+	"neptune_instance_type": "db.t4g.medium"
 }
