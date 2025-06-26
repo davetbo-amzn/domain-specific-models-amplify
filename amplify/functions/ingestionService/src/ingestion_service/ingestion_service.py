@@ -123,6 +123,7 @@ class IngestionService:
         return final_val
 
     def handle_object_created(self, file_dict):
+        print(f"Handling object creation for {file_dict}")
         user_id = file_dict['user_id']
         job_id = file_dict['job_id']
         filename = file_dict['filename']
@@ -140,8 +141,10 @@ class IngestionService:
     def handler(self, event, context={}):
         print(f"IngestionService received event {event}")
         for record in event['Records']:
+            print(f"Got record {record}")
             if 'body' in record:
                 body = json.loads(record['body'])
+                print(f"Got body {body}")
                 event = ''
                 if "Event" in body:
                     event = body["Event"]
@@ -152,63 +155,67 @@ class IngestionService:
                             "message": "Test event received"
                         })
                     }
-            s3_key = record['s3']['object']['key']
-            user_id = s3_key.split('/')[1]
-            bucket = record['s3']['bucket']['name']
-            job_id = s3_key.split('/')[2]
-            event_name = file['event_name']
-            filename = s3_key.split('/')[-1]
-            if 'event' in file and \
-                file["event"]== 's3:TestEvent':
-                # print("Deleting s3:TestEvent")
-                # delete_sqs_message(rcpt_handle, queue_url)
-                continue
+                if "Records" in body:
+                    for rec in body["Records"]:
+                        s3_key = rec['s3']['object']['key']
+                        user_id = s3_key.split('/')[1]
+                        bucket = rec['s3']['bucket']['name']
+                        job_id = s3_key.split('/')[2]
+                        event_name = ['event_name']
+                        filename = unquote_plus(s3_key.split('/')[-1])
+                        if 'event' in rec and \
+                        rec["event"]== 's3:TestEvent':
+                            # return 200 to delete this test message
+                            # return {
+                            #     "statusCode": 200
+                            # }
+                            continue
 
-            if file['filename'] is None:
-                # if the key ends in a / it will come back None.
-                # this happens when someone creates a folder in the
-                # console.
-                # print(f"Skipping rec because it's apparently a directory: {rec}")
-                continue
-            
-            if 'ObjectCreated' in event_name:
-                result = self.handle_object_created(file)
+                        if filename is None:
+                            # if the key ends in a / it will come back None.
+                            # this happens when someone creates a folder in the
+                            # console.
+                            # print(f"Skipping rec because it's apparently a directory: {rec}")
+                            continue
+                
+                        if 'ObjectCreated' in event_name:
+                            result = self.handle_object_created(file)
 
-            # elif 'ObjectRemoved' in event_name:
-            #     # print(f"Removing file {filename}")
-            #     try:
-            #         result = self.utils.invoke_lambda(
-            #             self.vector_store_provider_fn_name, 
-            #             {
-            #                 'operation': 'delete_record', 
-            #                 'origin': self.utils.get_ssm_params('ingestion_provider_function_name'),
-            #                 'args': {
-            #                     'filename': filename
-            #                 }
+                        # elif 'ObjectRemoved' in event_name:
+                        #     # print(f"Removing file {filename}")
+                        #     try:
+                        #         result = self.utils.invoke_lambda(
+                        #             self.vector_store_provider_fn_name, 
+                        #             {
+                        #                 'operation': 'delete_record', 
+                        #                 'origin': self.utils.get_ssm_params('ingestion_provider_function_name'),
+                        #                 'args': {
+                        #                     'filename': filename
+                        #                 }
 
-            #             }
-            #         )
-            #         # print(f"Result from deleting record from vector store: {result}")
-            #         result2 = self.utils.invoke_lambda(
-            #             self.ingestion_status_provider_fn_name, 
-            #             {
-            #                 'operation': 'delete_ingestion_status', 
-            #                 'origin': self.utils.get_ssm_params('ingestion_provider_function_name'),
-            #                 'args': {
-            #                     'user_id': user_id, 
-            #                     'filename': filename
-            #                 }
-            #             }
-            #         )
-            #         # print(f"Result from deleting ingestion_status: {result2}")
-            #         # self.vector_store_provider.delete_record(job_id, filename)
-            #         # self.ingestion_status_provider.delete_ingestion_status(user_id, filename)
-            #     except Exception as e:
-            #         # print(f"Error occurred while deleting file: {e}")
-            #         raise e
-        
-            # self.delete_message(rcpt_handle, queue_url)
-            
+                        #             }
+                        #         )
+                        #         # print(f"Result from deleting record from vector store: {result}")
+                        #         result2 = self.utils.invoke_lambda(
+                        #             self.ingestion_status_provider_fn_name, 
+                        #             {
+                        #                 'operation': 'delete_ingestion_status', 
+                        #                 'origin': self.utils.get_ssm_params('ingestion_provider_function_name'),
+                        #                 'args': {
+                        #                     'user_id': user_id, 
+                        #                     'filename': filename
+                        #                 }
+                        #             }
+                        #         )
+                        #         # print(f"Result from deleting ingestion_status: {result2}")
+                        #         # self.vector_store_provider.delete_record(job_id, filename)
+                        #         # self.ingestion_status_provider.delete_ingestion_status(user_id, filename)
+                        #     except Exception as e:
+                        #         # print(f"Error occurred while deleting file: {e}")
+                        #         raise e
+                    
+                        # self.delete_message(rcpt_handle, queue_url)
+                    
         return {
             "statusCode": 200,
             "body": "SUCCESS"
@@ -237,15 +244,16 @@ class IngestionService:
             # else:
             #     raise Exception(f'unsupported file type: {local_path}\nMore file types coming soon.')
             print(f"ingestion_service.ingest_file saving docs {docs}")
-            self.utils.save_vector_docs(docs, file_dict['job_id'], self.my_origin)
-            self.utils.set_ingestion_status(
-                file_dict['user_id'],
-                f"{file_dict['job_id']}/{file_dict['filename']}",
-                file_dict['etag'],
-                0,
-                'INGESTED',
-                self.my_origin
-            )
+            # self.utils.save_vector_docs(docs, file_dict['job_id'], self.my_origin)
+            # self.utils.set_ingestion_status(
+            #     file_dict['user_id'],
+            #     f"{file_dict['job_id']}/{file_dict['filename']}",
+            #     file_dict['etag'],
+            #     0,
+            #     'INGESTED',
+            #     self.my_origin
+            # )
+            print(f"ingested docs {docs}")
             return docs
         except Exception as e:
             print(f"Error occurred while ingesting file: {e}")
@@ -276,7 +284,7 @@ class IngestionService:
         if not 'etag' in extra_meta:
             extra_meta['etag'] = file_dict['etag']
             
-        loader.load(local_path, file_dict['user_id'], f"{file_dict['job_id']}/{file_dict['filename']}", extra_metadata=extra_meta, json_lines=json_lines)
+        return loader.load(local_path, file_dict['user_id'], f"{file_dict['job_id']}/{file_dict['filename']}", extra_metadata=extra_meta, json_lines=json_lines)
         # docs = loader.load_and_split(local_path, user_id, source, extra_metadata=extra_meta, json_lines=json_lines)
         # return docs
 

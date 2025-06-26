@@ -1,7 +1,7 @@
 #  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #  SPDX-License-Identifier: MIT-0
 
-from ingestion_service.splitters import Splitter
+from ingestion_service.splitters.splitter import Splitter
 import json
 
 

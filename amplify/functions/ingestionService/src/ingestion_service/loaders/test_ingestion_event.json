@@ -1,38 +1,20 @@
 {
   "Records": [
     {
-      "eventVersion": "2.1",
-      "eventSource": "aws:s3",
-      "awsRegion": "us-east-1",
-      "eventTime": "2024-01-15T10:30:00.000Z",
-      "userIdentity": {
-        "principalId": "EXAMPLE"
+      "messageId": "6a813462-befc-41fc-bc08-2ec1b4178872",
+      "receiptHandle": "AQEBTradifQ4hMzF42aJ3G+N8wm0ca58Fo/Ml4xGM2md1U/MboMVEJLdeuuC7JTpOZ/xLo4zylYYSyounF6wOzn3Q2l+jJvBKT/6TFa7NuXmLwXeClTmhG31Jt9GnIDRT1TZrPzobEOW7J7CSLYffs7IGHHI55pENgpA3Ddph5s6Xot8yRd9QF4rTtnoltAuDoYgOQaKGK2jvWlFNuG9bhE5QR8F9TFEibflSjaJTPF6ILd1mWYn7qR032KjDxtOuc7lMnt7m/MCNe13EuRdObRXuCyRNRPUROJOXljKZUwql1FRBail7sftpaFTG1Q9ESKUaN1Hw5id2xDFDOhfbbD8ySsoOgrE9yOANPXe035azRnx07mSj6aH27if55A46vTcQAZc0Y59e1n5YjWvZGLMFqSAhR2fBm/ZszHoihmhioVSdI5dwBcOZqgxwsw8LeuPiHFxEPfqhP1suBUirzm4aoSXIgLvBK9wLqcjTi8ABto=",
+      "body": "{\"Records\":[{\"eventVersion\":\"2.1\",\"eventSource\":\"aws:s3\",\"awsRegion\":\"us-west-2\",\"eventTime\":\"2025-06-24T19:59:28.570Z\",\"eventName\":\"ObjectCreated:Put\",\"userIdentity\":{\"principalId\":\"AWS:AROASNACLE5CVGHTS7BF5:CognitoIdentityCredentials\"},\"requestParameters\":{\"sourceIPAddress\":\"15.248.7.95\"},\"responseElements\":{\"x-amz-request-id\":\"N2JWDSS83P6G8ZQS\",\"x-amz-id-2\":\"7ZkXGqU7PFpAlPMAHjSzRxwVZQNeut6UV33P/0YvpT3XuU6qq7M3x9Q28SgL0905fBSt7Gvt5/QNAtXIHPgtZjv0yOTEWFZy\"},\"s3\":{\"s3SchemaVersion\":\"1.0\",\"configurationId\":\"arn:aws:cloudformation:us-west-2:165361166149:stack/amplifydomainmodelevals1davetbosandboxf16e2dae09CustomResourcesIngestionServiceStackB4DAF422/f7f84640-4fba-11f0-bda3-0a26a6136fb5--2095723660757355246\",\"bucket\":{\"name\":\"amplify-domainmodelevals1-jobsinputfilesbucket9fb2-r4v4bd2ikk0c\",\"ownerIdentity\":{\"principalId\":\"AZFNYNU55K3QK\"},\"arn\":\"arn:aws:s3:::amplify-domainmodelevals1-jobsinputfilesbucket9fb2-r4v4bd2ikk0c\"},\"object\":{\"key\":\"private/us-west-2%3A26804b27-457a-c310-c47c-d2841c7df2b6/jobs/ee256451-8e04-4971-8a10-12102f2ccfd7/inputs/asthma_crawl_sample.jsonl\",\"size\":225973,\"eTag\":\"01f570958bb5814d2f7c00ffb37e0aaa\",\"sequencer\":\"00685B03A0770D9348\"}}}]}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1750795169256",
+        "SenderId": "AROAUWHQT37XQVCB4XU5S:S3-PROD-END",
+        "ApproximateFirstReceiveTimestamp": "1750795169289"
       },
-      "requestParameters": {
-        "sourceIPAddress": "127.0.0.1"
-      },
-      "responseElements": {
-        "x-amz-request-id": "EXAMPLE123456789",
-        "x-amz-id-2": "EXAMPLE123/5678abcdefghijklambdaisawesome/mnopqrstuvwxyzABCDEFGH"
-      },
-      "s3": {
-        "s3SchemaVersion": "1.0",
-        "configurationId": "testConfigRule",
-        "bucket": {
-          "name": "amplify-domainmodelevals1-jobsinputfilesbucket9fb2-r4v4bd2ikk0c",
-          "arn": "arn:aws:s3:::amplify-domainmodelevals1-jobsinputfilesbucket9fb2-r4v4bd2ikk0c",
-          "ownerIdentity": {
-            "principalId": "EXAMPLE"
-          }
-        },
-        "object": {
-          "key": "private/test_user_id/test_job_id/asthma_crawl_sample.jsonl",
-          "size": 1024,
-          "eTag": "0123456789abcdef0123456789abcdef",
-          "versionId": "096fKKXTRTtl3on89fVO.nfljtsv6qko",
-          "sequencer": "0A1B2C3D4E5F678901"
-        }
-      }
+      "messageAttributes": {},
+      "md5OfBody": "3dcf8206cfc894fad243d4668568b013",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-west-2:165361166149:amplifydomainmodelevals1davetbosandboxf16e2d-IngestionQueue9CC91140-K5AX0f7eTieL",
+      "awsRegion": "us-west-2"
     }
   ]
 }

@@ -192,18 +192,13 @@ class BedrockProvider():
         elif operation == 'get_model_max_tokens':
             response = self.get_model_max_tokens(args['model_id'])
 
-        elif operation == 'get_prompt':
-            response = self.get_prompt(event.prompt_id)
-
         elif operation == 'get_token_count':
-            input_text = event.input_text
-            response = self.get_token_count(input_text)
+            response = self.get_token_count(args['input_text'])
 
         elif operation == 'invoke_model':
-            model_id = event.model_id
-            prompt = event.prompt if hasattr(event,'prompt')  else ''
-            inference_config = event.inference_config if hasattr(event,'inference_config') else {}
-            messages = event.messages if hasattr(event,'messages') else []
+            model_id = args['model_id']
+            inference_config = args['inference_config'] if 'inference_config' in args else {}
+            messages = args['messages'] if 'messages' in args else []
             response = self.invoke_model(
                 inference_config=inference_config,
                 messages=messages,
@@ -220,7 +215,7 @@ class BedrockProvider():
 
         result = {
             "statusCode": status,
-            "operation": event.operation,
+            "operation": operation,
             "response": response,
         }
         print(f"Bedrock_provider returning result {result}") 

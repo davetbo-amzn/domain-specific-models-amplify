@@ -2,7 +2,7 @@
 //  SPDX-License-Identifier: MIT-0
 import {v4 as uuidv4 } from 'uuid';
 import { FormEvent, useEffect, useState } from 'react';
-import { Alert, Button, Checkbox, Container, Form, FormField, Header, Input, RadioGroup, SpaceBetween, Spinner, Tabs, Multiselect, Box } from '@cloudscape-design/components';
+import { Alert, Button, Checkbox, Container, Form, FormField, Header, Input, RadioGroup, SpaceBetween, Spinner, Tabs, Multiselect, Box, Table } from '@cloudscape-design/components';
 import { useParams } from 'react-router-dom';
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal'
 import { CreateJob, DeleteJob, GetJob, JobProps, JobType, EvalDatasetApprovalStatus, EvalDatasetGenerationStatus, EvalStatus, ListJobs, RagIngestionStatus, UpdateJob } from './Job'
@@ -30,6 +30,8 @@ function JobForm() {
   const [uploadedFiles, setUploadedFiles] = useState([])
   const [alerts, setAlerts] = useState<typeof Alert[]>([])
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [evalData, setEvalData] = useState([{ id: 1, inputs: '', expectedOutputs: '', actualOutputs: '', llmJudgment: '' }]);
+  const [editingCell, setEditingCell] = useState<{rowId: number, column: string} | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -323,6 +325,72 @@ function JobForm() {
                       <Container>
                         <SpaceBetween size="l">
                           {jobId && <UploadedDocumentsTable isUpdate={isUpdate} jobId={jobId}/>}
+                        </SpaceBetween>
+                      </Container>
+                    )
+                  },
+                  {
+                    label: "Model Evaluation Data",
+                    id: "evaluation",
+                    content: (
+                      <Container>
+                        <SpaceBetween size="l">
+                          <Table
+                            columnDefinitions={[
+                              {
+                                id: "inputs",
+                                header: "Inputs",
+                                cell: item => editingCell?.rowId === item.id && editingCell?.column === 'inputs' ? (
+                                  <Input
+                                    value={item.inputs}
+                                    onChange={({ detail }) => {
+                                      setEvalData(prev => prev.map(row => 
+                                        row.id === item.id ? { ...row, inputs: detail.value } : row
+                                      ));
+                                    }}
+                                    onBlur={() => setEditingCell(null)}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <div onClick={() => setEditingCell({rowId: item.id, column: 'inputs'})} style={{cursor: 'pointer', minHeight: '20px'}}>
+                                    {item.inputs || 'Click to edit'}
+                                  </div>
+                                )
+                              },
+                              {
+                                id: "expectedOutputs",
+                                header: "Expected Outputs",
+                                cell: item => editingCell?.rowId === item.id && editingCell?.column === 'expectedOutputs' ? (
+                                  <Input
+                                    value={item.expectedOutputs}
+                                    onChange={({ detail }) => {
+                                      setEvalData(prev => prev.map(row => 
+                                        row.id === item.id ? { ...row, expectedOutputs: detail.value } : row
+                                      ));
+                                    }}
+                                    onBlur={() => setEditingCell(null)}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <div onClick={() => setEditingCell({rowId: item.id, column: 'expectedOutputs'})} style={{cursor: 'pointer', minHeight: '20px'}}>
+                                    {item.expectedOutputs || 'Click to edit'}
+                                  </div>
+                                )
+                              },
+                              {
+                                id: "actualOutputs",
+                                header: "Actual Outputs",
+                                cell: item => item.actualOutputs || "-"
+                              },
+                              {
+                                id: "llmJudgment",
+                                header: "LLM Judgment",
+                                cell: item => item.llmJudgment || "-"
+                              }
+                            ]}
+                            items={evalData}
+                            empty="No evaluation data available"
+                          />
                         </SpaceBetween>
                       </Container>
                     )
